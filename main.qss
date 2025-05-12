@@ -1,0 +1,314 @@
+/* Production Optimizer - Complete Stylesheet */
+/* Base styles */
+QWidget {
+    font-family: 'Segoe UI', 'Arial', sans-serif;
+    font-size: 11pt;
+    color: #333333;
+    background-color: #f5f7fa;
+}
+
+/* Header */
+.header {
+    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+        stop:0 #2a9d8f, stop:1 #264653);
+    color: white;
+    padding: 15px 25px;
+    border-bottom: 3px solid #e76f51;
+}
+
+#app_title {
+    font-size: 24pt;
+    font-weight: 700;
+    color: white;
+    background: transparent;
+}
+
+/* Buttons */
+QPushButton {
+    background-color: #2a9d8f;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    min-width: 90px;
+    font-weight: 500;
+}
+
+QPushButton:hover {
+    background-color: #21867a;
+}
+
+QPushButton:pressed {
+    background-color: #1a6b60;
+}
+
+QPushButton.primary-button {
+    background-color: #e76f51;
+    padding: 10px 20px;
+    font-size: 12pt;
+}
+
+QPushButton.primary-button:hover {
+    background-color: #d45b3d;
+}
+
+QPushButton.primary-button:pressed {
+    background-color: #b84c32;
+}
+
+/* Form controls */
+QLineEdit, QDoubleSpinBox, QSpinBox, QComboBox {
+    border: 2px solid #d1d5db;
+    border-radius: 6px;
+    padding: 6px 12px;
+    min-height: 30px;
+    background: white;
+}
+
+QLineEdit:focus, 
+QDoubleSpinBox:focus, 
+QSpinBox:focus, 
+QComboBox:focus {
+    border-color: #e76f51;
+}
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 20px;
+    border-left: 2px solid #d1d5db;
+}
+
+/* Tables */
+QTableWidget {
+    border: 2px solid #d1d5db;
+    border-radius: 6px;
+    background: white;
+    selection-background-color: #2a9d8f;
+    selection-color: white;
+    gridline-color: #e5e7eb;
+    font-size: 10pt;
+}
+
+QTableWidget::item {
+    padding: 8px;
+}
+
+QHeaderView::section {
+    background-color: #264653;
+    color: white;
+    border: none;
+    padding: 8px;
+    font-weight: bold;
+}
+
+/* Results sections */
+.result-status {
+    font-weight: 600;
+    font-size: 13pt;
+}
+
+/* Group Box Styling - Fixed Title Colors */
+QGroupBox {
+    border: 2px solid #d1d5db;
+    border-radius: 8px;
+    margin-top: 15px;
+    padding-top: 25px;
+    background: white;
+}
+
+QGroupBox::title {
+    /* Reset default styling */
+    color: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+/* Production Plan Section - Guaranteed Teal Title */
+QGroupBox[title="Production Plan"]::title {
+    color: #264653;
+    font-weight: bold;
+    font-size: 12pt;
+    subcontrol-origin: margin;
+    left: 15px;
+    padding: 0 8px;
+}
+
+/* Optimization Summary Section */
+QGroupBox[title="Optimization Summary"]::title {
+    color: #264653;
+    font-weight: bold;
+    font-size: 12pt;
+    subcontrol-origin: margin;
+    left: 15px;
+    padding: 0 8px;
+}
+
+/* Messages Section */
+QGroupBox[title="Messages & Warnings"]::title {
+    color: #264653;
+    font-weight: bold;
+    font-size: 12pt;
+    subcontrol-origin: margin;
+    left: 15px;
+    padding: 0 8px;
+}
+
+/* Production Plan Components */
+#production_table {
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    background-color: white;
+    alternate-background-color: #f8f9fa;
+    gridline-color: #e5e7eb;
+    font-size: 10pt;
+    min-height: 120px;
+}
+
+#production_table QHeaderView::section {
+    background-color: #2a9d8f;
+    color: white;
+    padding: 6px;
+    border: none;
+    font-weight: bold;
+}
+
+#plan_summary {
+    font-size: 10.5pt;
+    color: #4b5563;
+    background-color: #f9fafb;
+    border-radius: 4px;
+    border: 1px solid #e5e7eb;
+    padding: 8px;
+    margin-bottom: 8px;
+}
+
+#resource_summary {
+    font-size: 10pt;
+    color: #374151;
+    background-color: #f3f4f6;
+    border-radius: 4px;
+    border: 1px solid #e5e7eb;
+    padding: 8px;
+    margin-top: 8px;
+}
+
+/* Tabs */
+QTabWidget::pane {
+    border: 2px solid #d1d5db;
+    border-radius: 6px;
+    margin-top: -1px;
+    background: white;
+}
+
+QTabBar::tab {
+    background: #e9ecef;
+    border: 2px solid #d1d5db;
+    border-bottom: none;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    padding: 8px 16px;
+    margin-right: 4px;
+    min-width: 100px;
+    text-align: center;
+}
+
+QTabBar::tab:selected {
+    background: white;
+    border-color: #d1d5db;
+    border-bottom-color: white;
+    font-weight: bold;
+    color: #e76f51;
+}
+
+QTabBar::tab:!selected {
+    margin-top: 4px;
+}
+
+/* Splitter */
+QSplitter::handle {
+    background: #d1d5db;
+    height: 4px;
+    margin: 4px 0;
+}
+
+QSplitter::handle:hover {
+    background: #e76f51;
+}
+
+/* Message area */
+QTextEdit {
+    border: 2px solid #d1d5db;
+    border-radius: 6px;
+    background: white;
+    font-family: 'Consolas', monospace;
+    font-size: 10pt;
+}
+
+/* Status bar */
+QStatusBar {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #f5f7fa, stop:1 #e5e7eb);
+    color: #333333;
+    border-top: 2px solid #d1d5db;
+    padding: 6px;
+}
+
+/* Toolbar */
+QToolBar {
+    background: white;
+    border-bottom: 2px solid #d1d5db;
+    spacing: 5px;
+    padding: 5px;
+}
+
+QToolButton {
+    padding: 6px;
+    border-radius: 4px;
+}
+
+QToolButton:hover {
+    background: #e9ecef;
+}
+
+/* Message styling */
+.optimization-message {
+    font-size: 10pt;
+    padding: 8px;
+    border-radius: 4px;
+    margin: 4px 0;
+}
+
+.optimization-message-warning {
+    background-color: #fef3c7;
+    border: 1px solid #fcd34d;
+    color: #92400e;
+}
+
+.optimization-message-error {
+    background-color: #fee2e2;
+    border: 1px solid #fca5a5;
+    color: #991b1b;
+}
+
+.optimization-message-success {
+    background-color: #ecfdf5;
+    border: 1px solid #6ee7b7;
+    color: #065f46;
+}
+
+/* Value highlights */
+.value-highlight {
+    font-weight: bold;
+    color: #264653;
+}
+
+.profit-highlight {
+    color: #2a9d8f;
+    font-weight: bold;
+}
+
+.warning-highlight {
+    color: #e76f51;
+    font-weight: bold;
+}
