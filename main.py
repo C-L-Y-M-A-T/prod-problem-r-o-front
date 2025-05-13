@@ -387,7 +387,7 @@ class OptimizationPanel(QWidget):
             )
             self.optimizer_combo.clear()
             self.optimizer_combo.addItem("API connection failed")
-    
+
     def run_optimization(self):
         """Run the optimization with current inputs"""
         # Check if we have products
@@ -398,47 +398,58 @@ class OptimizationPanel(QWidget):
         
         # Get selected optimizer
         optimizer_type = self.optimizer_combo.currentText()
-        if optimizer_type == "API connection failed" or optimizer_type == "Loading optimizers...":
+        if optimizer_type in ["API connection failed", "Loading optimizers..."]:
             QMessageBox.warning(self, "Connection Error", "Cannot connect to optimization API")
             return
         
         # Prepare request data
         constraints = self.constraints_form.get_constraints_data()
         
-        # Properly structure products with name as a field inside each product, not as a key
+        # Format product data - ensure name field is present as API requires it
         formatted_products = []
         for p in products:
             formatted_products.append({
-                "name": p["name"],
-                "profit": p["profit"],
+                "product_name": p["name"],
+                "name": p["name"],  # Keep both name and product_name to satisfy requirements
+                "profit_per_unit": p["profit"],
                 "labor_hours": p["labor_hours"],
-                "material_cost": p["material_cost"],
+                "cost_per_unit": p["material_cost"],
                 "min_demand": p["min_demand"]
             })
         
-        # Properly structure resources with name as a field inside each resource
+        # Format resource data - use available_capacity instead of available
         formatted_resources = [
-            {
-                "name": "labor", 
-                "available": constraints["available_labor_hours"]
-            },
-            {
-                "name": "material_budget", 
-                "available": constraints["material_budget"]
-            },
-            {
-                "name": "production_capacity", 
-                "available": constraints["max_total_production"]
-            }
+            {"name": "labor", "available_capacity": constraints["available_labor_hours"]},
+            {"name": "material_budget", "available_capacity": constraints["material_budget"]},
+            {"name": "production_capacity", "available_capacity": constraints["max_total_production"]}
         ]
         
-        # Create request data matching the API's expected format
+        # Format resource usage for each product - update structure to match API requirements
+        resource_usage = []
+        for p in products:
+            # Add each resource usage separately with the required fields
+            resource_usage.append({
+                "product_name": p["name"],
+                "resource_name": "labor",
+                "usage_per_unit": p["labor_hours"]
+            })
+            resource_usage.append({
+                "product_name": p["name"],
+                "resource_name": "material_budget",
+                "usage_per_unit": p["material_cost"]
+            })
+            resource_usage.append({
+                "product_name": p["name"],
+                "resource_name": "production_capacity",
+                "usage_per_unit": 1  # Each product uses 1 unit of production capacity
+            })
+        
+        # Create request data
         request_data = {
             "objective": "maximize_profit",
             "products": formatted_products,
             "resources": formatted_resources,
-            "constraints": constraints,
-            "resource_usage": {}  # Will be filled by the backend
+            "resource_usage": resource_usage
         }
         
         # Show loading state
@@ -447,22 +458,32 @@ class OptimizationPanel(QWidget):
         QApplication.processEvents()
         
         try:
+            # Debug output
+            print(f"Sending request to: {API_BASE_URL}/optimize/{optimizer_type}")
+            print(f"Request payload: {json.dumps(request_data, indent=2)}")
+            
             # Make API request
             response = requests.post(f"{API_BASE_URL}/optimize/{optimizer_type}", 
-                                    json=request_data)
+                                json=request_data)
             
             # Process response
+            print(f"Response status code: {response.status_code}")
+            print(f"Response content: {response.text}")
+            
             if response.status_code == 200:
                 result_data = response.json()
                 self.results_widget.display_results(result_data)
             else:
-                error_data = response.json()
-                error_message = error_data.get("solver_message", "Unknown error")
-                validation_errors = error_data.get("validation_errors", [])
-                
-                error_text = f"Error: {error_message}\n\n"
-                if validation_errors:
-                    error_text += "Validation errors:\n" + "\n".join(f"- {err}" for err in validation_errors)
+                try:
+                    error_data = response.json()
+                    error_message = error_data.get("solver_message", "Unknown error")
+                    validation_errors = error_data.get("validation_errors", [])
+                    
+                    error_text = f"Error: {error_message}\n\n"
+                    if validation_errors:
+                        error_text += "Validation errors:\n" + "\n".join(f"- {err}" for err in validation_errors)
+                except Exception:
+                    error_text = f"Error: {response.text}"
                 
                 QMessageBox.critical(self, "Optimization Error", error_text)
                 
