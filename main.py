@@ -184,6 +184,51 @@ class ProductInputForm(QWidget):
         # Add some sample products
         self.add_sample_products()
         
+        # Connect table item changed signal to update products list
+        self.setup_table_connections()
+        
+    def setup_table_connections(self):
+        """Setup connections to capture table edits"""
+        self.products_table.itemChanged.connect(self.on_table_item_changed)
+    
+    def on_table_item_changed(self, item):
+        """Update the products list when a table item is edited"""
+        row = item.row()
+        col = item.column()
+        
+        if row >= len(self.products):
+            return
+            
+        product = self.products[row]
+        
+        # Based on which column was edited, update the correct field
+        if col == 0:  # Product name
+            product["name"] = item.text()
+        elif col == 1:  # Profit
+            try:
+                # Strip the "$" and convert to float
+                profit_text = item.text().replace("$", "").strip()
+                product["profit"] = float(profit_text)
+            except ValueError:
+                pass
+        elif col == 2:  # Labor hours
+            try:
+                product["labor_hours"] = float(item.text())
+            except ValueError:
+                pass
+        elif col == 3:  # Material cost
+            try:
+                # Strip the "$" and convert to float
+                cost_text = item.text().replace("$", "").strip()
+                product["material_cost"] = float(cost_text)
+            except ValueError:
+                pass
+        elif col == 4:  # Min demand
+            try:
+                product["min_demand"] = int(item.text())
+            except ValueError:
+                pass
+                
     def add_sample_products(self):
         """Add some sample products to get started"""
         sample_products = [
@@ -237,6 +282,9 @@ class ProductInputForm(QWidget):
     
     def update_table(self):
         """Update the products table with current data"""
+        # Temporarily disconnect the itemChanged signal to avoid recursion
+        self.products_table.itemChanged.disconnect(self.on_table_item_changed)
+        
         self.products_table.setRowCount(len(self.products))
         
         for row, product in enumerate(self.products):
@@ -257,11 +305,13 @@ class ProductInputForm(QWidget):
             demand_item = QTableWidgetItem(f"{product['min_demand']}")
             demand_item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
             self.products_table.setItem(row, 4, demand_item)
+        
+        # Reconnect the signal
+        self.products_table.itemChanged.connect(self.on_table_item_changed)
     
     def get_products_data(self) -> List[Dict[str, Any]]:
         """Get the products data in a format suitable for the API"""
         return self.products
-
 
 class ConstraintsInputForm(QWidget):
     """Form for entering constraint values"""
@@ -369,7 +419,7 @@ class OptimizationPanel(QWidget):
             response = requests.get(f"{API_BASE_URL}/optimizers")
             data = response.json()
             
-            self.optimizer_types = data.get("optimizers", [])
+            self.optimizer_types = data.get("optimizers", [])[1:]
             
             # Update combo box
             self.optimizer_combo.clear()
@@ -459,7 +509,9 @@ class OptimizationPanel(QWidget):
         
         try:
             # Debug output
+            print("---------------------------------debug")
             print(f"Sending request to: {API_BASE_URL}/optimize/{optimizer_type}")
+            print(f"Optimizer type: {optimizer_type}")
             print(f"Request payload: {json.dumps(request_data, indent=2)}")
             
             # Make API request
