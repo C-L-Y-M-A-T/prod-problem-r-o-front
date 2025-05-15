@@ -93,7 +93,8 @@ class OptimizationResultWidget(QWidget):
             self.status_label.setStyleSheet("color: orange; font-weight: bold;")
         
         self.objective_type_label.setText(objective_type.replace("_", " ").title())
-        value_prefix = "$" if objective_type == "maximize_profit" or objective_type == "minimize_cost" else ""
+        # value_prefix = "$" if objective_type == "maximize_profit" or objective_type == "minimize_cost" else ""
+        value_prefix=""
         self.objective_value_label.setText(f"{value_prefix}{result_data.get('objective_value', 0):.2f}")
         self.solve_time_label.setText(f"{result_data.get('solve_time', 0):.4f} seconds")
         
@@ -335,12 +336,10 @@ class ProductInputForm(QWidget):
         
         self.profit_per_unit = QDoubleSpinBox()
         self.profit_per_unit.setRange(0, 10000)
-        self.profit_per_unit.setPrefix("$")
         self.profit_per_unit.setValue(10)
         
         self.cost_per_unit = QDoubleSpinBox()
         self.cost_per_unit.setRange(0, 10000)
-        self.cost_per_unit.setPrefix("$")
         self.cost_per_unit.setValue(5)
         
         self.min_demand = QSpinBox()
@@ -468,11 +467,11 @@ class ProductInputForm(QWidget):
         for row, product in enumerate(self.products):
             self.products_table.setItem(row, 0, QTableWidgetItem(product["name"]))
             
-            profit_item = QTableWidgetItem(f"${product['profit_per_unit']:.2f}")
+            profit_item = QTableWidgetItem(f"{product['profit_per_unit']:.2f}")
             profit_item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
             self.products_table.setItem(row, 1, profit_item)
             
-            cost_item = QTableWidgetItem(f"${product['cost_per_unit']:.2f}")
+            cost_item = QTableWidgetItem(f"{product['cost_per_unit']:.2f}")
             cost_item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
             self.products_table.setItem(row, 2, cost_item)
             
