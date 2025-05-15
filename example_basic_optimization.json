@@ -1,0 +1,77 @@
+{
+  "objective": "maximize_profit",
+  "products": [
+    {
+      "name": "Product A",
+      "profit_per_unit": 10.0,
+      "cost_per_unit": 5.0
+    },
+    {
+      "name": "Product B",
+      "profit_per_unit": 8.0,
+      "cost_per_unit": 3.0
+    },
+    {
+      "name": "Product C",
+      "profit_per_unit": 12.0,
+      "cost_per_unit": 7.0
+    }
+  ],
+  "resources": [
+    {
+      "name": "Machine Time",
+      "available_capacity": 100.0
+    },
+    {
+      "name": "Raw Material",
+      "available_capacity": 150.0
+    }
+  ],
+  "resource_usage": [
+    {
+      "product_name": "Product A",
+      "resource_name": "Machine Time",
+      "usage_per_unit": 2.0
+    },
+    {
+      "product_name": "Product A",
+      "resource_name": "Raw Material",
+      "usage_per_unit": 3.0
+    },
+    {
+      "product_name": "Product B",
+      "resource_name": "Machine Time",
+      "usage_per_unit": 1.5
+    },
+    {
+      "product_name": "Product B",
+      "resource_name": "Raw Material",
+      "usage_per_unit": 2.0
+    },
+    {
+      "product_name": "Product C",
+      "resource_name": "Machine Time",
+      "usage_per_unit": 3.0
+    },
+    {
+      "product_name": "Product C",
+      "resource_name": "Raw Material",
+      "usage_per_unit": 4.0
+    }
+  ],
+  "demand_constraints": [
+    {
+      "product_name": "Product A",
+      "min_demand": 5.0,
+      "max_demand": 25.0
+    },
+    {
+      "product_name": "Product B",
+      "min_demand": 10.0
+    }
+  ],
+  "total_constraints": {
+    "min_total": 50.0,
+    "max_total": 80.0
+  }
+}

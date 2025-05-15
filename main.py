@@ -1,3 +1,4 @@
+import os
 import sys
 import json
 import requests
@@ -288,8 +289,10 @@ class ResourceInputForm(QWidget):
     def update_table(self):
         """Update the resources table with current data"""
         # Temporarily disconnect the itemChanged signal to avoid recursion
-        self.resources_table.itemChanged.disconnect(self.on_table_item_changed)
-        
+        try:
+            self.resources_table.itemChanged.disconnect(self.on_table_item_changed)
+        except TypeError:
+            pass
         self.resources_table.setRowCount(len(self.resources))
         
         for row, resource in enumerate(self.resources):
@@ -342,9 +345,6 @@ class ProductInputForm(QWidget):
         self.cost_per_unit.setRange(0, 10000)
         self.cost_per_unit.setPrefix("$")
         self.cost_per_unit.setValue(5)
-        
-        self.min_demand = QSpinBox()
-        self.min_demand.setRange(0, 10000)
         
         add_button = QPushButton("Add Product")
         add_button.clicked.connect(self.add_product)
@@ -402,18 +402,13 @@ class ProductInputForm(QWidget):
                 product["cost_per_unit"] = float(cost_text)
             except ValueError:
                 pass
-        elif col == 3:  # Min demand
-            try:
-                product["min_demand"] = int(item.text())
-            except ValueError:
-                pass
                 
     def add_sample_products(self):
         """Add some sample products to get started"""
         sample_products = [
-            {"name": "Product A", "profit_per_unit": 10.0, "cost_per_unit": 5.0, "min_demand": 5},
-            {"name": "Product B", "profit_per_unit": 8.0, "cost_per_unit": 3.0, "min_demand": 10},
-            {"name": "Product C", "profit_per_unit": 12.0, "cost_per_unit": 7.0, "min_demand": 0},
+            {"name": "Product A", "profit_per_unit": 10.0, "cost_per_unit": 5.0},
+            {"name": "Product B", "profit_per_unit": 8.0, "cost_per_unit": 3.0},
+            {"name": "Product C", "profit_per_unit": 12.0, "cost_per_unit": 7.0},
         ]
         
         for product in sample_products:
@@ -437,8 +432,7 @@ class ProductInputForm(QWidget):
         product = {
             "name": product_name,
             "profit_per_unit": self.profit_per_unit.value(),
-            "cost_per_unit": self.cost_per_unit.value(),
-            "min_demand": self.min_demand.value()
+            "cost_per_unit": self.cost_per_unit.value()
         }
         
         self.products.append(product)
@@ -461,8 +455,10 @@ class ProductInputForm(QWidget):
     def update_table(self):
         """Update the products table with current data"""
         # Temporarily disconnect the itemChanged signal to avoid recursion
-        self.products_table.itemChanged.disconnect(self.on_table_item_changed)
-        
+        try:
+            self.products_table.itemChanged.disconnect(self.on_table_item_changed)
+        except TypeError:
+            pass
         self.products_table.setRowCount(len(self.products))
         
         for row, product in enumerate(self.products):
@@ -475,10 +471,6 @@ class ProductInputForm(QWidget):
             cost_item = QTableWidgetItem(f"${product['cost_per_unit']:.2f}")
             cost_item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
             self.products_table.setItem(row, 2, cost_item)
-            
-            demand_item = QTableWidgetItem(f"{product['min_demand']}")
-            demand_item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
-            self.products_table.setItem(row, 3, demand_item)
         
         # Reconnect the signal
         self.products_table.itemChanged.connect(self.on_table_item_changed)
@@ -699,6 +691,14 @@ class DemandConstraintsForm(QWidget):
     def init_ui(self):
         layout = QVBoxLayout(self)
         
+        # Add a descriptive label
+        info_label = QLabel(
+            "Optional: Add specific demand constraints for products. "
+            "If any constraints are added, the demand-constrained optimization will be used."
+        )
+        info_label.setWordWrap(True)
+        layout.addWidget(info_label)
+        
         # Demand constraints table
         self.constraints_table = QTableWidget()
         self.constraints_table.setColumnCount(3)
@@ -717,10 +717,12 @@ class DemandConstraintsForm(QWidget):
         self.min_demand = QDoubleSpinBox()
         self.min_demand.setRange(0, 10000)
         self.min_demand.setValue(0)
+        self.min_demand.setSpecialValueText("No minimum")  # Indicate no min constraint when value is 0
         
         self.max_demand = QDoubleSpinBox()
         self.max_demand.setRange(0, 10000)
-        self.max_demand.setValue(1000)
+        self.max_demand.setValue(0)
+        self.max_demand.setSpecialValueText("No maximum")  # Indicate no max constraint when value is 0
         
         form_layout.addRow("Product:", self.product_combo)
         form_layout.addRow("Minimum Demand:", self.min_demand)
@@ -732,9 +734,13 @@ class DemandConstraintsForm(QWidget):
         remove_button = QPushButton("Remove Selected")
         remove_button.clicked.connect(self.remove_selected_constraint)
         
+        clear_all_button = QPushButton("Clear All Constraints")
+        clear_all_button.clicked.connect(self.clear_all_constraints)
+        
         buttons_layout = QHBoxLayout()
         buttons_layout.addWidget(add_button)
         buttons_layout.addWidget(remove_button)
+        buttons_layout.addWidget(clear_all_button)
         
         layout.addLayout(form_layout)
         layout.addLayout(buttons_layout)
@@ -765,9 +771,28 @@ class DemandConstraintsForm(QWidget):
                 pass
         elif col == 2:  # Max demand
             try:
-                constraint["max_demand"] = float(item.text())
+                text = item.text()
+                if text == "No maximum":
+                    constraint["max_demand"] = 0
+                else:
+                    constraint["max_demand"] = float(text)
             except ValueError:
                 pass
+    
+    def clear_all_constraints(self):
+        """Clear all demand constraints"""
+        if self.demand_constraints:
+            reply = QMessageBox.question(
+                self, 
+                "Confirm Clear", 
+                "Are you sure you want to clear all demand constraints?",
+                QMessageBox.Yes | QMessageBox.No, 
+                QMessageBox.No
+            )
+            
+            if reply == QMessageBox.Yes:
+                self.demand_constraints = []
+                self.update_table()
     
     def update_products(self, products):
         """Update the available products"""
@@ -798,11 +823,23 @@ class DemandConstraintsForm(QWidget):
                     f"Demand constraints for {product_name} already exist"
                 )
                 return
+        
+        # Only add if at least one constraint is non-zero
+        min_demand = self.min_demand.value()
+        max_demand = self.max_demand.value()
+        
+        if min_demand == 0 and max_demand == 0:
+            QMessageBox.warning(
+                self,
+                "Input Error",
+                "Please set at least one constraint (min or max demand)"
+            )
+            return
                 
         constraint = {
             "product_name": product_name,
-            "min_demand": self.min_demand.value(),
-            "max_demand": self.max_demand.value()
+            "min_demand": min_demand,
+            "max_demand": max_demand
         }
         
         self.demand_constraints.append(constraint)
@@ -859,11 +896,13 @@ class DemandConstraintsForm(QWidget):
         for row, constraint in enumerate(self.demand_constraints):
             self.constraints_table.setItem(row, 0, QTableWidgetItem(constraint["product_name"]))
             
-            min_item = QTableWidgetItem(f"{constraint['min_demand']:.2f}")
+            min_value = constraint["min_demand"]
+            min_item = QTableWidgetItem("No minimum" if min_value == 0 else f"{min_value:.2f}")
             min_item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
             self.constraints_table.setItem(row, 1, min_item)
             
-            max_item = QTableWidgetItem(f"{constraint['max_demand']:.2f}" if constraint["max_demand"] > 0 else "None")
+            max_value = constraint["max_demand"]
+            max_item = QTableWidgetItem("No maximum" if max_value == 0 else f"{max_value:.2f}")
             max_item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
             self.constraints_table.setItem(row, 2, max_item)
         
@@ -881,11 +920,15 @@ class DemandConstraintsForm(QWidget):
     
     def get_demand_constraints(self) -> List[Dict[str, Any]]:
         """Get the demand constraints data in a format suitable for the API"""
-        return self.demand_constraints
+        # Filter constraints to remove any with both min and max as 0
+        return [
+            constraint for constraint in self.demand_constraints
+            if constraint["min_demand"] > 0 or constraint["max_demand"] > 0
+        ]
 
 
 class TotalConstraintsForm(QWidget):
-    """Form for entering total production constraints"""
+    """Form for entering optional total production constraints"""
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -894,26 +937,40 @@ class TotalConstraintsForm(QWidget):
     def init_ui(self):
         layout = QFormLayout(self)
         
+        # Add a descriptive label
+        info_label = QLabel(
+            "Optional: Set minimum and/or maximum total production across all products. "
+            "Leave at zero if no constraint is needed."
+        )
+        info_label.setWordWrap(True)
+        layout.addRow(info_label)
+        
         # Min total production
         self.min_total = QDoubleSpinBox()
         self.min_total.setRange(0, 100000)
-        self.min_total.setValue(50)
+        self.min_total.setValue(0)
+        self.min_total.setSpecialValueText("No minimum")  # Indicate no constraint when value is 0
         
         # Max total production
         self.max_total = QDoubleSpinBox()
         self.max_total.setRange(0, 100000)
-        self.max_total.setValue(80)
+        self.max_total.setValue(0)
+        self.max_total.setSpecialValueText("No maximum")  # Indicate no constraint when value is 0
         
         layout.addRow("Minimum Total Production:", self.min_total)
         layout.addRow("Maximum Total Production:", self.max_total)
     
     def get_total_constraints(self) -> Dict[str, float]:
-        """Get the total constraints data"""
-        return {
-            "min_total": self.min_total.value(),
-            "max_total": self.max_total.value()
-        }
-
+        """Get the total constraints data, only returning values > 0"""
+        constraints = {}
+        
+        if self.min_total.value() > 0:
+            constraints["min_total"] = self.min_total.value()
+            
+        if self.max_total.value() > 0:
+            constraints["max_total"] = self.max_total.value()
+            
+        return constraints
 
 class OptimizationPanel(QWidget):
     """Main panel for setting up and running optimizations"""
@@ -981,17 +1038,32 @@ class OptimizationPanel(QWidget):
         self.usage_form = ResourceUsageForm()
         input_tabs.addTab(self.usage_form, "Resource Usage")
         
-        # Constraints tab
+    # Constraints tab
         constraints_widget = QWidget()
         constraints_layout = QVBoxLayout(constraints_widget)
         
-        # Demand constraints
-        self.demand_constraints_form = DemandConstraintsForm()
-        constraints_layout.addWidget(self.demand_constraints_form)
+        # Add explanatory header
+        constraints_header = QLabel(
+            "<h3>Optimization Constraints</h3>"
+            "<p>Configure product-specific and total production constraints below.</p>"
+
+        )
+        constraints_header.setWordWrap(True)
+        constraints_layout.addWidget(constraints_header)
         
-        # Total constraints
+        # Demand constraints group
+        demand_constraints_group = QGroupBox("Product Demand Constraints")
+        demand_constraints_layout = QVBoxLayout(demand_constraints_group)
+        self.demand_constraints_form = DemandConstraintsForm()
+        demand_constraints_layout.addWidget(self.demand_constraints_form)
+        constraints_layout.addWidget(demand_constraints_group)
+        
+        # Total constraints group
+        total_constraints_group = QGroupBox("Total Production Constraints")
+        total_constraints_layout = QVBoxLayout(total_constraints_group)
         self.total_constraints_form = TotalConstraintsForm()
-        constraints_layout.addWidget(self.total_constraints_form)
+        total_constraints_layout.addWidget(self.total_constraints_form)
+        constraints_layout.addWidget(total_constraints_group)
         
         constraints_layout.addStretch()
         input_tabs.addTab(constraints_widget, "Constraints")
@@ -1016,6 +1088,25 @@ class OptimizationPanel(QWidget):
         
         # Add sample data after initial setup
         self.add_sample_data()
+        # Status indicator for which endpoint will be used
+        self.endpoint_indicator = QLabel("Using basic production model")
+        self.endpoint_indicator.setStyleSheet("color: blue; font-style: italic;")
+        optimizer_layout.addWidget(self.endpoint_indicator)
+        
+        # Connect demand constraints form to update endpoint indicator
+        self.demand_constraints_form.constraints_table.model().rowsInserted.connect(self.update_endpoint_indicator)
+        self.demand_constraints_form.constraints_table.model().rowsRemoved.connect(self.update_endpoint_indicator)
+        
+    def update_endpoint_indicator(self):
+        """Update the indicator showing which endpoint will be used"""
+        has_demand_constraints = len(self.demand_constraints_form.get_demand_constraints()) > 0
+        
+        if has_demand_constraints:
+            self.endpoint_indicator.setText("Using demand-constrained model")
+            self.endpoint_indicator.setStyleSheet("color: green; font-style: italic;")
+        else:
+            self.endpoint_indicator.setText("Using basic production model")
+            self.endpoint_indicator.setStyleSheet("color: blue; font-style: italic;")        
     
     def update_forms(self):
         """Update dependent forms when products or resources change"""
@@ -1100,15 +1191,37 @@ class OptimizationPanel(QWidget):
         # Determine objective
         objective = "maximize_profit" if self.max_profit_radio.isChecked() else "minimize_cost"
         
+        # Get demand constraints and determine which endpoint to use
+        demand_constraints = self.demand_constraints_form.get_demand_constraints()
+        total_constraints = {}
+        
+        # Only include total constraints if they're set to non-zero values
+        min_total = self.total_constraints_form.min_total.value()
+        max_total = self.total_constraints_form.max_total.value()
+        
+        if min_total > 0:
+            total_constraints["min_total"] = min_total
+        
+        if max_total > 0:
+            total_constraints["max_total"] = max_total
+        
+        # Choose the appropriate endpoint based on constraints
+        endpoint_suffix = "/demand-constrained" if demand_constraints else "/basic-production"
+        
         # Prepare request data
         request_data = {
             "objective": objective,
             "products": products,
             "resources": resources,
-            "resource_usage": resource_usage,
-            "demand_constraints": self.demand_constraints_form.get_demand_constraints(),
-            "total_constraints": self.total_constraints_form.get_total_constraints()
+            "resource_usage": resource_usage
         }
+        
+        # Only include constraints if they exist
+        if demand_constraints:
+            request_data["demand_constraints"] = demand_constraints
+            
+        if total_constraints:
+            request_data["total_constraints"] = total_constraints
         
         # Show loading state
         self.run_button.setEnabled(False)
@@ -1122,7 +1235,7 @@ class OptimizationPanel(QWidget):
             
             # Make API request
             response = requests.post(
-                f"{API_BASE_URL}/optimize/{optimizer_type}", 
+                f"{API_BASE_URL}/optimize/{optimizer_type}{endpoint_suffix}", 
                 json=request_data,
                 headers={"Content-Type": "application/json"}
             )
@@ -1211,11 +1324,32 @@ class MainWindow(QMainWindow):
     def load_stylesheet(self):
         """Load the application stylesheet"""
         try:
-            with open("main.qss", "r") as f:
-                stylesheet = f.read()
-                self.setStyleSheet(stylesheet)
-        except FileNotFoundError:
-            print("Style file not found. Using default style.")
+            # Option 1: Absolute path
+            stylesheet_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "main.qss")
+            
+            # Option 2: Look in different locations
+            if not os.path.exists(stylesheet_path):
+                alternative_paths = ["./styles/main.qss", "./resources/main.qss", "./paste.txt"]
+                for path in alternative_paths:
+                    if os.path.exists(path):
+                        stylesheet_path = path
+                        break
+            
+            # Load and apply the stylesheet
+            if os.path.exists(stylesheet_path):
+                with open(stylesheet_path, "r") as f:
+                    stylesheet = f.read()
+                    try:
+                        self.setStyleSheet(stylesheet)
+                        print(f"Successfully loaded stylesheet from {stylesheet_path}")
+                    except Exception as e:
+                        print(f"Failed to parse stylesheet: {e}")
+                        # Try to identify problematic lines
+                        self.debug_stylesheet(stylesheet_path)
+            else:
+                print(f"Style file not found at {stylesheet_path}. Using default style.")
+        except Exception as e:
+            print(f"Error loading stylesheet: {e}")
     
     def show_help(self):
         """Show help information"""

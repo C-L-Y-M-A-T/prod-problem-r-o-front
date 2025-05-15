@@ -1,0 +1,96 @@
+{
+  "objective": "maximize_profit",
+  "products": [
+    {
+      "name": "Product A",
+      "profit_per_unit": 100,
+      "cost_per_unit": 60
+    },
+    {
+      "name": "Product B",
+      "profit_per_unit": 120,
+      "cost_per_unit": 80
+    },
+    {
+      "name": "Product C",
+      "profit_per_unit": 80,
+      "cost_per_unit": 40
+    }
+  ],
+  "resources": [
+    {
+      "name": "Machine Hours",
+      "available_capacity": 200
+    },
+    {
+      "name": "Raw Material",
+      "available_capacity": 300
+    },
+    {
+      "name": "Labor Hours",
+      "available_capacity": 250
+    }
+  ],
+  "resource_usage": [
+    {
+      "product_name": "Product A",
+      "resource_name": "Machine Hours",
+      "usage_per_unit": 2
+    },
+    {
+      "product_name": "Product A",
+      "resource_name": "Raw Material",
+      "usage_per_unit": 3
+    },
+    {
+      "product_name": "Product A",
+      "resource_name": "Labor Hours",
+      "usage_per_unit": 1
+    },
+    {
+      "product_name": "Product B",
+      "resource_name": "Machine Hours",
+      "usage_per_unit": 3
+    },
+    {
+      "product_name": "Product B",
+      "resource_name": "Raw Material",
+      "usage_per_unit": 2
+    },
+    {
+      "product_name": "Product B",
+      "resource_name": "Labor Hours",
+      "usage_per_unit": 2
+    },
+    {
+      "product_name": "Product C",
+      "resource_name": "Machine Hours",
+      "usage_per_unit": 1
+    },
+    {
+      "product_name": "Product C",
+      "resource_name": "Raw Material",
+      "usage_per_unit": 4
+    },
+    {
+      "product_name": "Product C",
+      "resource_name": "Labor Hours",
+      "usage_per_unit": 1.5
+    }
+  ],
+  "demand_constraints": [
+    {
+      "product_name": "Product A",
+      "min_demand": 20,
+      "max_demand": 50
+    },
+    {
+      "product_name": "Product B",
+      "max_demand": 30
+    },
+    {
+      "product_name": "Product C",
+      "min_demand": 10
+    }
+  ]
+}
