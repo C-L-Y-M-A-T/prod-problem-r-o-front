@@ -320,9 +320,9 @@ class ProductInputForm(QWidget):
         
         # Products table
         self.products_table = QTableWidget()
-        self.products_table.setColumnCount(4)
+        self.products_table.setColumnCount(3)
         self.products_table.setHorizontalHeaderLabels([
-            "Product", "Profit Per Unit", "Cost Per Unit", "Min Demand"
+            "Product", "Price Per Unit", "Cost Per Unit"
         ])
         self.products_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.products_table.setAlternatingRowColors(True)
@@ -352,7 +352,6 @@ class ProductInputForm(QWidget):
         input_layout.addWidget(self.product_name)
         input_layout.addWidget(self.profit_per_unit)
         input_layout.addWidget(self.cost_per_unit)
-        input_layout.addWidget(self.min_demand)
         input_layout.addWidget(add_button)
         
         remove_button = QPushButton("Remove Selected")
@@ -1051,7 +1050,7 @@ class OptimizationPanel(QWidget):
             response = requests.get(f"{API_BASE_URL}/optimizers")
             if response.status_code == 200:
                 data = response.json()
-                self.optimizer_types = data.get("optimizers", [])
+                self.optimizer_types = data.get("optimizers", [])[1:]
                 
                 # Update combo box
                 self.optimizer_combo.clear()
@@ -1225,7 +1224,7 @@ class MainWindow(QMainWindow):
         
         <p><b>Step 1:</b> Add products with their properties:</p>
         <ul>
-            <li>Enter product name, profit per unit, cost per unit, and minimum demand</li>
+            <li>Enter product name, price per unit, cost per unit, and minimum demand</li>
             <li>Click "Add Product" to add it to the list</li>
         </ul>
         
